@@ -493,8 +493,33 @@ describe CanCan::ControllerResource do
     expect(@controller.instance_variable_get(:@project)).to be_nil
   end
 
-  context "with a strong parameters method" do
+  context "protected methods" do
+    context "resource_base" do
+      it "should return data from resource_class() if :through is not specified" do
+        resource = CanCan::ControllerResource.new(@controller)
+        expected_text = "Some text"
+        resource.stub(:resource_class => expected_text)
 
+        expect(resource.send(:resource_base)).to eq expected_text
+      end
+
+      it "should raise error if @options has only :through key" do
+        resource = CanCan::ControllerResource.new(@controller, :through => :category)
+
+        expect { resource.send(:resource_base) }.to raise_error
+      end
+
+      it "should return data from resource_class() if keys :through and :shallow are specified" do
+        resource = CanCan::ControllerResource.new(@controller, :through => :category, :shallow => true)
+        expected_text = "Some text"
+        resource.stub(:resource_class => expected_text)
+
+        expect(resource.send(:resource_base)).to eq expected_text
+      end
+    end
+  end
+
+  context "with a strong parameters method" do
     it "only calls the santitize method with actions matching param_actions" do
       @params.merge!(:controller => "project", :action => "update")
       @controller.stub(:resource_params).and_return(:resource => 'params')
